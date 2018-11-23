@@ -1,2 +1,4 @@
 ﻿  main.c
+c:\users\hyoje\source\repos\sortingtest\main.c(103): warning C4129: ' ': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(106): warning C4129: ' ': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
   SortingTest.vcxproj -> C:\Users\hyoje\source\repos\SortingTest\Debug\SortingTest.exe
