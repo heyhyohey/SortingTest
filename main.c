@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <conio.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
@@ -17,34 +18,54 @@ typedef struct movie {
 }Movie;
 
 // 함수 정의
+void insertion_sort(Movie*, int*);
 Movie* make_movie_array(int*);
 void remove_char(char *str, char ch);
 bool check_ascii(char *str);
+bool check_bracket(char *str);
+int check_quotes(char *str);
 int main(int argc, char* argv[]) {
 	// 1. 영화 데이터를 받아옴
 	int total = 0;	// 최종 배열의 수
 	int input = 0;  // 사용자 입력값
+	char c;	// 버퍼의 문자를 비우기 위한 변수
+	bool flag = true;	// 종료 플래그
 	Movie *movies = make_movie_array(&total);		// 영화 목록 배열 변수
-	/*
-	clock_t start, end;					// 시간측정 변수
-	start = clock();
-	end = clock();
-	printf("%.3lfs \n", (double)(end - start) / (double)1000);
-	*/
-	// 2. 메뉴출력
-	while (1) {
-		scanf("%d", &input);
-		//getche();
-	}
-
-	// 3. 입력받은 데이터를 기준으로 정렬 수행
-
-	// 4. 정렬 결과 출력 및 시간 출력
-
 	
+	// 2. 어떤 정렬을 수행할 것인지 입력
+	while (flag) {
+		input = 6;
+		c = 'a';
+		printf("<Sort>\n 1) Insertino sort\n 2) Merge sort\n 3) Quick sort\n 4) Heap sort\n 5) Redix sort\n-1) Exit\ninput>> ");
+		scanf("%d", &input);
+		switch (input) {
+		case 1:
+			insertion_sort(movies, &total);
+			break;
+		case 2:
+			//merge_sort();
+			break;
+		case 3:
+			//quick_sort();
+			break;
+		case 4:
+			//heap_sort();
+			break;
+		case 5:
+			//redix_sort();
+			break;
+		case -1:
+			flag = false;
+			break;
+		default:
+			printf("Wrong input\n");
+		}
+		printf("\n");
+		while (c != '\n')
+			c = getchar(stdin);
+	}	
 	
 	free(movies);
-
 	return 0;
 }
 
@@ -55,6 +76,25 @@ bool check_ascii(char *str) {
 			return false;
 	}
 	return true;
+}
+
+// 괄호 개수 확인 함수
+bool check_bracket(char *str) {
+	for (; *str != '\0'; str++) {
+		if (*str == '(' || *str == ')')
+			return true;
+	}
+	return false;
+}
+
+// 큰따옴표 개수 카운트 함수
+int check_quotes(char *str) {
+	int cnt = 0;
+	for (; *str != '\0'; str++) {
+		if (*str == '\"')
+			cnt++;
+	}
+	return cnt;
 }
 
 // 문자 제거 함수
@@ -73,9 +113,12 @@ void remove_char(char *str, char ch) {
 Movie* make_movie_array(int* total) {
 	Movie *movies = (Movie*)malloc(sizeof(Movie) * 150000);		// 영화 배열 힙영역에 할당
 	FILE* fp = fopen(FILE_PATH, "r");	// 파일 포인터
-	char buf[2048], title_year[1024], title[1024], genres[1024], index[128], year[128];		// 버퍼 배열
+	char buf[2048], title_year[1024], title[1024], genres[1024], index[128], *year[128];		// 버퍼 배열
 	char temp[1024], dumme[1024];	// 임시 버퍼 배열
+	char* p_title_year;
 	int err;
+
+	memset(movies, 0, sizeof(Movie)*150000);
 
 	// 1. 파일 포인터를 받았는지 확인
 	if (fp == NULL) {
@@ -96,36 +139,85 @@ Movie* make_movie_array(int* total) {
 		if (!check_ascii(buf))	continue;
 
 		// 2-4. 인덱스와 나머지 부분을 분리
-		err = sscanf(buf, "%[^,],%[^\n]%s]", index, temp, dumme);
+		err = sscanf(buf, "%[^,],%[^\n]%s", index, temp, dumme);
 
-		// 2-5. 분리된 부분이 큰따옴표(")로 시작하는지 확인하고 제목과 장르를 분리
+		// 2-5. 큰따옴표가 2개 이상인지 검사
+		if (check_quotes(temp) > 2)	continue;
+
+		// 2-6. 분리된 부분이 큰따옴표(")로 시작하는지 확인하고 제목과 장르를 분리
 		if (*temp == '\"') {
-			err = sscanf(temp, "%*[\"]%[^\"]%*[\",]%[a-zA-Z0-9\ ()|]", title_year, genres);
+			err = sscanf(temp, "%*[\"]%[^\"]%*[\",]\",%[a-zA-Z0-9 ()|]", title_year, genres);
 		}
 		else
-			err = sscanf(temp, "%[^,],%[a-zA-Z0-9\ ()|]", title_year, genres);
+			err = sscanf(temp, "%[^,],%[a-zA-Z0-9 ()|]", title_year, genres);
 
-		// 2-6. 제목에서 연도를 추출하여 분리
-		err = sscanf(title_year, "%[^(](%s", title, year);
+		// 2-7. 연도가 있는지 검사
+		if (!check_bracket(title_year))	continue;
 
-		// 2-7. 연도의 괄호를 제거
+		// 2-8. 제목과 연도를 추출
+		strcpy(year, strrchr(title_year, '('));
+		strncpy_s(title, sizeof(title), title_year, strlen(title_year) - 7);
+		if (year == NULL) continue;
+
+		// 2-9. 연도의 괄호를 제거
 		remove_char(year, '(');
 		remove_char(year, ')');
-
-		// 2-8. 정제된 데이터를 삽입
+		
+		// 2-10. 정제된 데이터를 삽입
 		movies[*total].index = atoi(index);
 		strcpy(movies[*total].title, title);
 		movies[*total].year = atoi(year);
 		strcpy(movies[*total].genres, genres);
 		(*total)++;
 	}
-	
+
 	*total -= 1;
 
-	for (int j = 0; j < *total; j++)
-		printf("%d %s %d %s\n", movies[j].index, movies[j].title, movies[j].year, movies[j].genres);
-
 	fclose(fp);
-
 	return movies;
+}
+
+// 삽입 정렬
+void insertion_sort(Movie* movies, int* total) {
+	Movie* sorted_movies = malloc(sizeof(Movie)*150000);
+	Movie temp;
+	int i, j;
+	clock_t start, end;					// 시간측정 변수
+	
+	// 배열 복사
+	memcpy(sorted_movies, movies, sizeof(Movie) * 150000);
+
+	printf("\n<Insertion Sort>\n");
+
+	start = clock();	// 시작 시간
+	// 1. 연도 기준으로 오름차순 정렬
+	for (i = 1; i < 1000; i++) {
+		j = i;
+		while (j > 0 && sorted_movies[j].year < sorted_movies[j - 1].year) {
+			temp = sorted_movies[j];
+			sorted_movies[j] = sorted_movies[j - 1];
+			sorted_movies[j - 1] = temp;
+			j--;
+		}
+	}
+
+	// 2. 제목 기준으로 오름차순 정렬
+	for (i = 1; i < 1000; i++) {
+		j = i;
+		while (j > 0 && strcmp(sorted_movies[j].title, sorted_movies[j - 1].title) < 0 && sorted_movies[j].year == sorted_movies[j - 1].year) {
+			temp = sorted_movies[j];
+			sorted_movies[j] = sorted_movies[j - 1];
+			sorted_movies[j - 1] = temp;
+			j--;
+		}
+	}
+	end = clock();	// 종료 시간
+
+	// 3. 결과 출력
+	for (i = 0; i < 1000; i++) {
+		printf("%d %s\n", sorted_movies[i].year, sorted_movies[i].title);
+	}
+	printf("%.3lfs \n", (double)(end - start) / (double)1000);
+
+	free(sorted_movies);
 }

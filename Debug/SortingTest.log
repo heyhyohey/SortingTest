@@ -1,4 +1,11 @@
 ﻿  main.c
-c:\users\hyoje\source\repos\sortingtest\main.c(103): warning C4129: ' ': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
-c:\users\hyoje\source\repos\sortingtest\main.c(106): warning C4129: ' ': 문자 이스케이프 시퀀스를 인식할 수 없습니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(65): warning C4087: 'getchar': 'void' 매개 변수 목록을 사용하여 선언되었습니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(158): warning C4047: '함수': 'char *'의 간접 참조 수준이 'char *[128]'과(와) 다릅니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(158): warning C4024: 'strcpy': 형식 및 실제 매개 변수 1의 형식이 서로 다릅니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(163): warning C4047: '함수': 'char *'의 간접 참조 수준이 'char *[128]'과(와) 다릅니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(163): warning C4024: 'remove_char': 형식 및 실제 매개 변수 1의 형식이 서로 다릅니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(164): warning C4047: '함수': 'char *'의 간접 참조 수준이 'char *[128]'과(와) 다릅니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(164): warning C4024: 'remove_char': 형식 및 실제 매개 변수 1의 형식이 서로 다릅니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(169): warning C4047: '함수': 'const char *'의 간접 참조 수준이 'char *[128]'과(와) 다릅니다.
+c:\users\hyoje\source\repos\sortingtest\main.c(169): warning C4024: 'atoi': 형식 및 실제 매개 변수 1의 형식이 서로 다릅니다.
   SortingTest.vcxproj -> C:\Users\hyoje\source\repos\SortingTest\Debug\SortingTest.exe
