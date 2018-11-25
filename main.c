@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
+#include <Windows.h>
 
 // 파일 경로 정의
 #define FILE_PATH "movies.txt"
@@ -22,12 +23,28 @@ typedef struct movie {
 
 // 함수 정의
 void execute_insertion_sort(Movie*, int);
+void execute_merge_sort(Movie*, int);
+void execute_quick_sort(Movie*, int);
+void execute_heap_sort(Movie*, int);
+void execute_redix_sort(Movie*, int);
 void insertion_sort(Movie*, int);
+void merge_sort(Movie*, int);
+void merge(Movie*, int, int, int, int, Movie*, Movie*);
+void merge_sort_by_title(Movie*, int);
+void merge_by_title(Movie*, int, int, int, int, Movie*, Movie*);
+void quick_sort(Movie*, int, int);
+void quick_sort_by_title(Movie*, int, int);
+void heap_sort(Movie*, int);
+void heap_sort_by_title(Movie*, int);
+void build_heap(Movie*, int);
+void heaplify(Movie*, int, int);
+void heaplify_by_title(Movie*, int, int);
 Movie* make_movie_array(int*);
 void remove_char(char*, char);
 bool check_ascii(char*);
 bool check_bracket(char*);
 int check_quotes(char*);
+
 int main(int argc, char* argv[]) {
 	// 1. 영화 데이터를 받아옴
 	int total = 0;	// 최종 배열의 수
@@ -36,33 +53,36 @@ int main(int argc, char* argv[]) {
 	bool flag = true;	// 종료 플래그
 	Movie *movies = make_movie_array(&total);		// 영화 목록 배열 변수
 	
+	printf("\n");
 	// 2. 어떤 정렬을 수행할 것인지 입력
 	while (flag) {
-		input = 6;
-		c = 'a';
+		input = 6;	// 입력값 초기화
+		c = 'a';	// 문자 초기화
 		printf("<Sort>\n 1) Insertino sort\n 2) Merge sort\n 3) Quick sort\n 4) Heap sort\n 5) Redix sort\n-1) Exit\ninput>> ");
 		scanf("%d", &input);
+		system("cls");
 		switch (input) {
 		case 1:
 			execute_insertion_sort(movies, total);
 			break;
 		case 2:
-			//merge_sort();
+			execute_merge_sort(movies, total);
 			break;
 		case 3:
-			//quick_sort();
+			execute_quick_sort(movies, total);
 			break;
 		case 4:
-			//heap_sort();
+			execute_heap_sort(movies, total);
 			break;
 		case 5:
-			//redix_sort();
+			execute_redix_sort(movies, total);
 			break;
 		case -1:
+			printf("\n<Message>\nExit\n");
 			flag = false;
 			break;
 		default:
-			printf("Wrong input\n");
+			printf("\n<Message>\nWrong input\n");
 		}
 		printf("\n");
 		while (c != '\n')
@@ -180,13 +200,9 @@ Movie* make_movie_array(int* total) {
 	return movies;
 }
 
-// 삽입 정렬 프로그램
+// 삽입 정렬 실행 모듈
 void execute_insertion_sort(Movie* all_movies, int total) {
 	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
-
-	for (int i = 0; i < total; i++) {
-		printf("%d %s\n", all_movies[i].index, all_movies[i].title);
-	}
 
 	printf("\n<Insertion Sort>\n");
 	// 1000개 정렬
@@ -240,4 +256,429 @@ void insertion_sort(Movie* movies, int cnt) {
 	end = clock();	// 종료 시간
 
 	printf("%5d data\t%.3lfs \n", cnt, (double)(end - start) / (double)1000);
+}
+
+// 합병 정렬 실행 모듈
+void execute_merge_sort(Movie* all_movies, int total) {
+	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
+	clock_t start, end;		// 시간측정 변수
+
+	printf("\n<Merge Sort>\n");
+	// 1000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	merge_sort(movies, 1000);			// 연도를 기준으로 합병 정렬
+	merge_sort_by_title(movies, 1000);	// 제목을 기준으로 합병 정렬
+	end = clock();		// 종료 시간
+	printf(" 1000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 5000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	merge_sort(movies, 5000);			// 연도를 기준으로 합병 정렬
+	merge_sort_by_title(movies, 5000);	// 제목을 기준으로 합병 정렬
+	end = clock();		// 종료 시간
+	printf(" 5000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 10000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	merge_sort(movies, 10000);			// 연도를 기준으로 합병 정렬
+	merge_sort_by_title(movies, 10000);	// 제목을 기준으로 합병 정렬
+	end = clock();		// 종료 시간
+	printf("10000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 전체 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	merge_sort(movies, total);			// 연도를 기준으로 합병 정렬
+	merge_sort_by_title(movies, total);	// 제목을 기준으로 합병 정렬
+	end = clock();		// 종료 시간
+	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
+
+	free(movies);
+}
+
+// 합병 정렬
+void merge_sort(Movie* movies, int cnt) {
+	int step = 1;
+	Movie *m1 = malloc(cnt * sizeof(Movie));
+	Movie *m2 = malloc(cnt * sizeof(Movie));
+	while (step < cnt) {
+		int i, s1, e1, s2, e2;
+		for (i = 0; (i + step - 1) < (cnt - 1); i += 2 * step) {
+			s1 = i;
+			e1 = i + step - 1;
+			s2 = e1 + 1;
+			(i + 2 * step - 1) < (cnt - 1) ? (e2 = i + 2 * step - 1) : (e2 = cnt - 1);
+			merge(movies, s1, e1, s2, e2, m1, m2);
+		}
+		step = step << 1;
+	}
+	free(m1);
+	free(m2);
+}
+
+// 합병
+void merge(Movie *movies, int s1, int e1, int s2, int e2, Movie* m1, Movie* m2) {
+	int len1 = e1 - s1 + 1;
+	int len2 = e2 - s2 + 1;
+	int p1 = 0;
+	int p2 = 0;
+	int p = s1;
+	memcpy(m1, movies + s1, sizeof(Movie)*len1);
+	memcpy(m2, movies + s2, sizeof(Movie)*len2);
+	while (p1 < len1&&p2 < len2) {
+		if (m1[p1].year < m2[p2].year) {
+			movies[p++] = m1[p1++];
+		}
+		else {
+			movies[p++] = m2[p2++];
+		}
+	}
+	while (p1 < len1) {
+		movies[p++] = m1[p1++];
+	}
+	while (p2 < len2) {
+		movies[p++] = m2[p2++];
+	}
+}
+
+// 제목을 기준으로 합병 정렬
+void merge_sort_by_title(Movie* movies, int cnt) {
+	int step = 1;
+	Movie *m1 = malloc(cnt * sizeof(Movie));
+	Movie *m2 = malloc(cnt * sizeof(Movie));
+	while (step < cnt) {
+		int i, s1, e1, s2, e2;
+		for (i = 0; (i + step - 1) < (cnt - 1); i += 2 * step) {
+			s1 = i;
+			e1 = i + step - 1;
+			s2 = e1 + 1;
+			(i + 2 * step - 1) < (cnt - 1) ? (e2 = i + 2 * step - 1) : (e2 = cnt - 1);
+			merge_by_title(movies, s1, e1, s2, e2, m1, m2);
+		}
+		step = step << 1;
+	}
+	free(m1);
+	free(m2);
+}
+
+// 제목을 기준으로 합병
+void merge_by_title(Movie *movies, int s1, int e1, int s2, int e2, Movie* m1, Movie* m2) {
+	int len1 = e1 - s1 + 1;
+	int len2 = e2 - s2 + 1;
+	int p1 = 0;
+	int p2 = 0;
+	int p = s1;
+	memcpy(m1, movies + s1, sizeof(Movie)*len1);
+	memcpy(m2, movies + s2, sizeof(Movie)*len2);
+	while (p1 < len1&&p2 < len2) {
+		if ((m1[p1].year == m2[p2].year) && strcmp(m1[p1].title, m2[p2].title) < 0) {
+			movies[p++] = m1[p1++];
+		}
+		else {
+			movies[p++] = m2[p2++];
+		}
+	}
+	while (p1 < len1) {
+		movies[p++] = m1[p1++];
+	}
+	while (p2 < len2) {
+		movies[p++] = m2[p2++];
+	}
+}
+
+// 퀵 정렬 실행 모듈
+void execute_quick_sort(Movie* all_movies, int total) {
+	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
+	clock_t start, end;		// 시간측정 변수
+
+	printf("\n<Quick Sort>\n");
+	// 1000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	quick_sort_by_title(movies, 0, 1000);	// 제목을 기준으로 퀵 정렬
+	quick_sort(movies, 0, 1000);			// 연도를 기준으로 퀵 정렬
+
+	end = clock();		// 종료 시간
+	printf(" 1000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 5000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	quick_sort(movies, 0, 5000);			// 연도를 기준으로 퀵 정렬
+	quick_sort_by_title(movies, 0, 5000);	// 제목을 기준으로 퀵 정렬
+	end = clock();		// 종료 시간
+	printf(" 5000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 10000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	quick_sort(movies, 0, 10000);			// 연도를 기준으로 퀵 정렬
+	quick_sort_by_title(movies, 0, 10000);	// 제목을 기준으로 퀵 정렬
+	end = clock();		// 종료 시간
+	printf("10000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 전체 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	quick_sort(movies, 0, total - 1);			// 연도를 기준으로 퀵 정렬
+	quick_sort_by_title(movies, 0, total - 1);	// 제목을 기준으로 퀵 정렬
+	end = clock();		// 종료 시간
+	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
+
+	free(movies);
+}
+
+// 제목을 기준으로 퀵 정렬
+void quick_sort_by_title(Movie* movies, int start, int end) {
+	int i, j;
+	Movie pivot, temp;
+	i = start;
+	j = end - 1;
+	pivot = movies[(start + end) / 2];
+
+	while (i <= j) {
+		while (movies[i].year == pivot.year && (movies[i].title, pivot.title) < 0 && i < end) {
+			i++;
+		}
+		while (movies[j].year == pivot.year && strcmp(movies[j].title, pivot.title) > 0 && j > start) {
+			j--;
+		}
+		if (i <= j) {
+			temp = movies[i];
+			movies[i] = movies[j];
+			movies[j] = temp;
+			i++;
+			j--;
+		}
+	}
+	if (j > start)
+		quick_sort(movies, start, j + 1);
+	if (i < end)
+		quick_sort(movies, i, end);
+}
+
+// 퀵 정렬
+void quick_sort(Movie* movies, int start, int end) {
+	int i, j;
+	Movie pivot, temp;
+	i = start;
+	j = end - 1;
+	pivot = movies[(start + end) / 2];
+
+	while (i <= j) {
+		while (movies[i].year < pivot.year && i < end) {
+			i++;
+		}
+		while (movies[j].year > pivot.year && j > start) {
+			j--;
+		}
+		if (i <= j) {
+			temp = movies[i];
+			movies[i] = movies[j];
+			movies[j] = temp;
+			i++;
+			j--;
+		}
+	}
+	if (j > start)
+		quick_sort(movies, start, j + 1);
+	if (i < end)
+		quick_sort(movies, i, end);
+}
+
+// 힙 정렬 실행 모듈
+void execute_heap_sort(Movie* all_movies, int total) {
+	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
+	clock_t start, end;		// 시간측정 변수
+
+	printf("\n<Heap Sort> - unstable\n");
+	// 1000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	heap_sort(movies, 1000);			// 연도를 기준으로 힙 정렬
+	heap_sort_by_title(movies, 1000);	// 제목을 기준으로 힙 정렬
+	end = clock();		// 종료 시간
+	printf(" 1000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 5000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	heap_sort(movies, 5000);			// 연도를 기준으로 힙 정렬
+	heap_sort_by_title(movies, 5000);	// 제목을 기준으로 힙 정렬
+	end = clock();		// 종료 시간
+	printf(" 5000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 10000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	heap_sort(movies, 10000);			// 연도를 기준으로 힙 정렬
+	heap_sort_by_title(movies, 10000);	// 제목을 기준으로 힙 정렬
+	end = clock();		// 종료 시간
+	printf("10000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 전체 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	heap_sort(movies, total);			// 연도를 기준으로 힙 정렬
+	heap_sort_by_title(movies, total);	// 제목을 기준으로 힙 정렬
+	end = clock();		// 종료 시간
+	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
+
+	free(movies);
+}
+
+// 힙 정렬
+void heap_sort(Movie *movies, int cnt) {
+	build_heap(movies, cnt);
+	Movie temp;
+	int newlen = cnt;
+	while (newlen > 1) {
+		//swap head with last
+		temp = movies[0];
+		movies[0] = movies[newlen - 1];
+		movies[newlen - 1] = temp;
+		newlen--;
+		//heapify new heap
+		heaplify(movies, newlen, 0);
+	}
+}
+
+// 힙 생성
+void build_heap(Movie *movies, int cnt) {
+	int i;
+	for (i = cnt - 1; i >= 0; i--) {
+		if (2 * i + 1 > cnt - 1) continue;
+		heaplify(movies, cnt, i);
+	}
+}
+
+// heaplify
+void heaplify(Movie *movies, int cnt, int index) {
+	int left = 2 * index + 1;
+	int right = 2 * index + 2;
+	Movie temp;
+	if (left > cnt - 1) {
+		return;
+	}
+	else if (left == cnt - 1) {
+		if (movies[index].year < movies[left].year) {
+			//swap
+			temp = movies[index];
+			movies[index] = movies[left];
+			movies[left] = temp;
+		}
+		return;
+	}
+	else {
+		if (movies[index].year < movies[left].year || movies[index].year < movies[right].year) {
+			if (movies[left].year < movies[right].year) {
+				//swap right with parent
+				temp = movies[index];
+				movies[index] = movies[right];
+				movies[right] = temp;
+				heaplify(movies, cnt, right);
+			}
+			else {
+				//swap left with parent
+				temp = movies[index];
+				movies[index] = movies[left];
+				movies[left] = temp;
+				heaplify(movies, cnt, left);
+			}
+		}
+	}
+}
+
+// 제목을 기준으로 힙 정렬
+void heap_sort_by_title(Movie *movies, int cnt) {
+	build_heap(movies, cnt);
+	Movie temp;
+	int newlen = cnt;
+	while (newlen > 1) {
+		//swap head with last
+		temp = movies[0];
+		movies[0] = movies[newlen - 1];
+		movies[newlen - 1] = temp;
+		newlen--;
+		//heapify new heap
+		heaplify_by_title(movies, newlen, 0);
+	}
+}
+
+// 제목을 기준으로 heaplify
+void heaplify_by_title(Movie *movies, int cnt, int index) {
+	int left = 2 * index + 1;
+	int right = 2 * index + 2;
+	Movie temp;
+	if (left > cnt - 1) {
+		return;
+	}
+	else if (left == cnt - 1) {
+		if (strcmp(movies[index].title, movies[left].title) > 0) {
+			//swap
+			temp = movies[index];
+			movies[index] = movies[left];
+			movies[left] = temp;
+		}
+		return;
+	}
+	else {
+		if (strcmp(movies[index].title, movies[left].title) > 0 || strcmp(movies[index].title, movies[right].title) > 0) {
+			if (strcmp(movies[left].title, movies[right].title) > 0) {
+				//swap right with parent
+				temp = movies[index];
+				movies[index] = movies[right];
+				movies[right] = temp;
+				heaplify(movies, cnt, right);
+			}
+			else {
+				//swap left with parent
+				temp = movies[index];
+				movies[index] = movies[left];
+				movies[left] = temp;
+				heaplify(movies, cnt, left);
+			}
+		}
+	}
+}
+
+// 기수 정렬 실행 모듈
+void execute_redix_sort(Movie* all_movies, int total) {
+	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
+	clock_t start, end;		// 시간측정 변수
+
+	printf("\n<Redix Sort> - unstable\n");
+	// 1000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	//redix_sort(movies, 1000);			// 연도를 기준으로 기수 정렬
+	//redix_sort_by_title(movies, 1000);	// 제목을 기준으로 기수 정렬
+	end = clock();		// 종료 시간
+	printf(" 1000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 5000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	
+	end = clock();		// 종료 시간
+	printf(" 5000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 10000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	
+	end = clock();		// 종료 시간
+	printf("10000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 전체 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	start = clock();	// 시작 시간
+	
+	end = clock();		// 종료 시간
+	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
+
+	free(movies);
 }
