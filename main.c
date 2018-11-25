@@ -6,8 +6,11 @@
 #include <ctype.h>
 #include <time.h>
 
-// 파일 경로
+// 파일 경로 정의
 #define FILE_PATH "movies.txt"
+
+// 배열 크기 정의
+#define ARRAY_SIZE 100000
 
 // 영화 구조체
 typedef struct movie {
@@ -18,12 +21,13 @@ typedef struct movie {
 }Movie;
 
 // 함수 정의
-void insertion_sort(Movie*, int*);
+void execute_insertion_sort(Movie*, int);
+void insertion_sort(Movie*, int);
 Movie* make_movie_array(int*);
-void remove_char(char *str, char ch);
-bool check_ascii(char *str);
-bool check_bracket(char *str);
-int check_quotes(char *str);
+void remove_char(char*, char);
+bool check_ascii(char*);
+bool check_bracket(char*);
+int check_quotes(char*);
 int main(int argc, char* argv[]) {
 	// 1. 영화 데이터를 받아옴
 	int total = 0;	// 최종 배열의 수
@@ -40,7 +44,7 @@ int main(int argc, char* argv[]) {
 		scanf("%d", &input);
 		switch (input) {
 		case 1:
-			insertion_sort(movies, &total);
+			execute_insertion_sort(movies, total);
 			break;
 		case 2:
 			//merge_sort();
@@ -111,14 +115,14 @@ void remove_char(char *str, char ch) {
 
 // 영화 데이터 배열 생성 함수
 Movie* make_movie_array(int* total) {
-	Movie *movies = (Movie*)malloc(sizeof(Movie) * 150000);		// 영화 배열 힙영역에 할당
+	Movie *movies = (Movie*)malloc(sizeof(Movie) * ARRAY_SIZE);		// 영화 배열 힙영역에 할당
 	FILE* fp = fopen(FILE_PATH, "r");	// 파일 포인터
 	char buf[2048], title_year[1024], title[1024], genres[1024], index[128], *year[128];		// 버퍼 배열
 	char temp[1024], dumme[1024];	// 임시 버퍼 배열
 	char* p_title_year;
 	int err;
 
-	memset(movies, 0, sizeof(Movie)*150000);
+	memset(movies, 0, sizeof(Movie)*ARRAY_SIZE);
 
 	// 1. 파일 포인터를 받았는지 확인
 	if (fp == NULL) {
@@ -172,52 +176,68 @@ Movie* make_movie_array(int* total) {
 	}
 
 	*total -= 1;
-
 	fclose(fp);
 	return movies;
 }
 
+// 삽입 정렬 프로그램
+void execute_insertion_sort(Movie* all_movies, int total) {
+	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
+
+	for (int i = 0; i < total; i++) {
+		printf("%d %s\n", all_movies[i].index, all_movies[i].title);
+	}
+
+	printf("\n<Insertion Sort>\n");
+	// 1000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	insertion_sort(movies, 1000);
+
+	// 5000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	insertion_sort(movies, 5000);
+
+	// 10000개 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	insertion_sort(movies, 10000);
+
+	// 전체 정렬
+	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
+	insertion_sort(movies, total);
+
+	free(movies);
+}
+
 // 삽입 정렬
-void insertion_sort(Movie* movies, int* total) {
-	Movie* sorted_movies = malloc(sizeof(Movie)*150000);
+void insertion_sort(Movie* movies, int cnt) {
 	Movie temp;
 	int i, j;
 	clock_t start, end;					// 시간측정 변수
-	
-	// 배열 복사
-	memcpy(sorted_movies, movies, sizeof(Movie) * 150000);
-
-	printf("\n<Insertion Sort>\n");
 
 	start = clock();	// 시작 시간
+
 	// 1. 연도 기준으로 오름차순 정렬
-	for (i = 1; i < 1000; i++) {
+	for (i = 1; i < cnt; i++) {
 		j = i;
-		while (j > 0 && sorted_movies[j].year < sorted_movies[j - 1].year) {
-			temp = sorted_movies[j];
-			sorted_movies[j] = sorted_movies[j - 1];
-			sorted_movies[j - 1] = temp;
+		while (j > 0 && movies[j].year < movies[j - 1].year) {
+			temp = movies[j];
+			movies[j] = movies[j - 1];
+			movies[j - 1] = temp;
 			j--;
 		}
 	}
 
 	// 2. 제목 기준으로 오름차순 정렬
-	for (i = 1; i < 1000; i++) {
+	for (i = 1; i < cnt; i++) {
 		j = i;
-		while (j > 0 && strcmp(sorted_movies[j].title, sorted_movies[j - 1].title) < 0 && sorted_movies[j].year == sorted_movies[j - 1].year) {
-			temp = sorted_movies[j];
-			sorted_movies[j] = sorted_movies[j - 1];
-			sorted_movies[j - 1] = temp;
+		while (j > 0 && strcmp(movies[j].title, movies[j - 1].title) < 0 && movies[j].year == movies[j - 1].year) {
+			temp = movies[j];
+			movies[j] = movies[j - 1];
+			movies[j - 1] = temp;
 			j--;
 		}
 	}
 	end = clock();	// 종료 시간
 
-	// 3. 결과 출력
-	for (i = 0; i < 1000; i++) {
-		printf("%d %s\n", sorted_movies[i].year, sorted_movies[i].title);
-	}
-	printf("%.3lfs \n", (double)(end - start) / (double)1000);
-
-	free(sorted_movies);
+	printf("%5d data\t%.3lfs \n", cnt, (double)(end - start) / (double)1000);
 }
