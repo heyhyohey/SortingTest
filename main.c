@@ -39,6 +39,9 @@ void heap_sort_by_title(Movie*, int);
 void build_heap(Movie*, int);
 void heaplify(Movie*, int, int);
 void heaplify_by_title(Movie*, int, int);
+void radix_sort(Movie*, int);
+void count_sort(Movie*, int, int);
+int get_max(Movie*, int);
 Movie* make_movie_array(int*);
 void remove_char(char*, char);
 bool check_ascii(char*);
@@ -204,7 +207,7 @@ Movie* make_movie_array(int* total) {
 void execute_insertion_sort(Movie* all_movies, int total) {
 	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
 
-	printf("\n<Insertion Sort>\n");
+	printf("\n<Insertion Sort> - stable\n");
 	// 1000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	insertion_sort(movies, 1000);
@@ -263,7 +266,7 @@ void execute_merge_sort(Movie* all_movies, int total) {
 	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
 	clock_t start, end;		// 시간측정 변수
 
-	printf("\n<Merge Sort>\n");
+	printf("\n<Merge Sort> - stable\n");
 	// 1000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
@@ -394,7 +397,7 @@ void execute_quick_sort(Movie* all_movies, int total) {
 	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
 	clock_t start, end;		// 시간측정 변수
 
-	printf("\n<Quick Sort>\n");
+	printf("\n<Quick Sort> - unstable\n");
 	// 1000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
@@ -650,35 +653,83 @@ void execute_redix_sort(Movie* all_movies, int total) {
 	Movie* movies = malloc(sizeof(Movie) * ARRAY_SIZE);
 	clock_t start, end;		// 시간측정 변수
 
-	printf("\n<Redix Sort> - unstable\n");
+	printf("\n<Redix Sort> - stable\n");
 	// 1000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
-	//redix_sort(movies, 1000);			// 연도를 기준으로 기수 정렬
-	//redix_sort_by_title(movies, 1000);	// 제목을 기준으로 기수 정렬
+	radix_sort(movies, 1000);			// 연도를 기준으로 기수 정렬
+	//radix_sort_by_title(movies, 1000);	// 제목을 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf(" 1000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
-
+/*
+	for (int i = 0; i < 1000; i++) {
+		printf("%d %s\n", movies[i].year, movies[i].title);
+	}
+	*/
 	// 5000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
-	
+	radix_sort(movies, 5000);			// 연도를 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf(" 5000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
 
 	// 10000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
-	
+	radix_sort(movies, 10000);			// 연도를 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf("10000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
 
 	// 전체 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
-	
+	radix_sort(movies, total);			// 연도를 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
 
 	free(movies);
+}
+
+// 최대값 함수
+int get_max(Movie* movies, int cnt) {
+	Movie mx = movies[0];
+	int i;
+	for (i = 1; i < cnt; i++)
+		if (movies[i].year > mx.year)
+			mx = movies[i];
+	return mx.year;
+}
+
+// 계수 정렬
+void count_sort(Movie *movies, int cnt, int exp) {
+	Movie* output = malloc(sizeof(Movie) * cnt);
+	int i;
+	int count[10] = { 0 };
+
+	// 자릿수의 종류별로 카운트
+	for (i = 0; i < cnt; i++)
+		count[(movies[i].year / exp) % 10]++;
+
+	for (i = 1; i < 10; i++)
+		count[i] += count[i - 1];
+
+	// 출력 배열 생성
+	for (i = cnt - 1; i >= 0; i--) {
+		output[count[(movies[i].year / exp) % 10] - 1] = movies[i];
+		count[(movies[i].year / exp) % 10]--;
+	}
+
+	for (i = 0; i < cnt; i++)
+		movies[i] = output[i];
+
+	free(output);
+}
+
+// 계수 정렬을 사용한 기수 정렬
+void radix_sort(Movie* movies, int cnt) {
+	int m = get_max(movies, cnt);
+
+	int exp;
+	for (exp = 1; m / exp > 0; exp *= 10)
+		count_sort(movies, cnt, exp);
 }
