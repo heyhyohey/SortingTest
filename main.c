@@ -37,16 +37,21 @@ void quick_sort_by_title(Movie*, int, int);
 void heap_sort(Movie*, int);
 void heap_sort_by_title(Movie*, int);
 void build_heap(Movie*, int);
+void build_heap_by_title(Movie*, int);
 void heaplify(Movie*, int, int);
 void heaplify_by_title(Movie*, int, int);
 void radix_sort(Movie*, int);
 void count_sort(Movie*, int, int);
 int get_max(Movie*, int);
+void radix_sort_by_title(Movie*, int);
+void count_sort_by_title(Movie*, int, int);
+int get_min_by_title(Movie*, int);
 Movie* make_movie_array(int*);
 void remove_char(char*, char);
 bool check_ascii(char*);
 bool check_bracket(char*);
 int check_quotes(char*);
+void display_movies(Movie*, int);
 
 int main(int argc, char* argv[]) {
 	// 1. 영화 데이터를 받아옴
@@ -86,10 +91,11 @@ int main(int argc, char* argv[]) {
 			break;
 		default:
 			printf("\n<Message>\nWrong input\n");
+			while (c != '\n')
+				c = getchar(stdin);
+			break;
 		}
 		printf("\n");
-		while (c != '\n')
-			c = getchar(stdin);
 	}	
 	
 	free(movies);
@@ -224,6 +230,9 @@ void execute_insertion_sort(Movie* all_movies, int total) {
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	insertion_sort(movies, total);
 
+	// 출력
+	display_movies(movies, total);
+
 	free(movies);
 }
 
@@ -298,6 +307,9 @@ void execute_merge_sort(Movie* all_movies, int total) {
 	merge_sort_by_title(movies, total);	// 제목을 기준으로 합병 정렬
 	end = clock();		// 종료 시간
 	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 출력
+	display_movies(movies, total);
 
 	free(movies);
 }
@@ -401,9 +413,8 @@ void execute_quick_sort(Movie* all_movies, int total) {
 	// 1000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
-	quick_sort_by_title(movies, 0, 1000);	// 제목을 기준으로 퀵 정렬
 	quick_sort(movies, 0, 1000);			// 연도를 기준으로 퀵 정렬
-
+	quick_sort_by_title(movies, 0, 1000);	// 제목을 기준으로 퀵 정렬
 	end = clock();		// 종료 시간
 	printf(" 1000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
 
@@ -431,6 +442,9 @@ void execute_quick_sort(Movie* all_movies, int total) {
 	end = clock();		// 종료 시간
 	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
 
+	// 출력
+	display_movies(movies, total);
+
 	free(movies);
 }
 
@@ -443,10 +457,10 @@ void quick_sort_by_title(Movie* movies, int start, int end) {
 	pivot = movies[(start + end) / 2];
 
 	while (i <= j) {
-		while (movies[i].year == pivot.year && (movies[i].title, pivot.title) < 0 && i < end) {
+		while (strcmp(movies[i].title, pivot.title) < 0 && i < end) {
 			i++;
 		}
-		while (movies[j].year == pivot.year && strcmp(movies[j].title, pivot.title) > 0 && j > start) {
+		while (strcmp(movies[j].title, pivot.title) > 0 && j > start) {
 			j--;
 		}
 		if (i <= j) {
@@ -458,9 +472,9 @@ void quick_sort_by_title(Movie* movies, int start, int end) {
 		}
 	}
 	if (j > start)
-		quick_sort(movies, start, j + 1);
+		quick_sort_by_title(movies, start, j + 1);
 	if (i < end)
-		quick_sort(movies, i, end);
+		quick_sort_by_title(movies, i, end);
 }
 
 // 퀵 정렬
@@ -530,6 +544,9 @@ void execute_heap_sort(Movie* all_movies, int total) {
 	end = clock();		// 종료 시간
 	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
 
+	// 출력
+	display_movies(movies, total);
+
 	free(movies);
 }
 
@@ -555,6 +572,15 @@ void build_heap(Movie *movies, int cnt) {
 	for (i = cnt - 1; i >= 0; i--) {
 		if (2 * i + 1 > cnt - 1) continue;
 		heaplify(movies, cnt, i);
+	}
+}
+
+// 제목을 기준으로 힙 생성
+void build_heap_by_title(Movie *movies, int cnt) {
+	int i;
+	for (i = cnt - 1; i >= 0; i--) {
+		if (2 * i + 1 > cnt - 1) continue;
+		heaplify_by_title(movies, cnt, i);
 	}
 }
 
@@ -597,7 +623,7 @@ void heaplify(Movie *movies, int cnt, int index) {
 
 // 제목을 기준으로 힙 정렬
 void heap_sort_by_title(Movie *movies, int cnt) {
-	build_heap(movies, cnt);
+	build_heap_by_title(movies, cnt);
 	Movie temp;
 	int newlen = cnt;
 	while (newlen > 1) {
@@ -620,7 +646,7 @@ void heaplify_by_title(Movie *movies, int cnt, int index) {
 		return;
 	}
 	else if (left == cnt - 1) {
-		if (strcmp(movies[index].title, movies[left].title) > 0) {
+		if (strcmp(movies[index].title, movies[left].title) < 0) {
 			//swap
 			temp = movies[index];
 			movies[index] = movies[left];
@@ -629,20 +655,20 @@ void heaplify_by_title(Movie *movies, int cnt, int index) {
 		return;
 	}
 	else {
-		if (strcmp(movies[index].title, movies[left].title) > 0 || strcmp(movies[index].title, movies[right].title) > 0) {
-			if (strcmp(movies[left].title, movies[right].title) > 0) {
+		if (strcmp(movies[index].title, movies[left].title) < 0 || strcmp(movies[index].title, movies[right].title) < 0) {
+			if (strcmp(movies[left].title, movies[right].title) < 0) {
 				//swap right with parent
 				temp = movies[index];
 				movies[index] = movies[right];
 				movies[right] = temp;
-				heaplify(movies, cnt, right);
+				heaplify_by_title(movies, cnt, right);
 			}
 			else {
 				//swap left with parent
 				temp = movies[index];
 				movies[index] = movies[left];
 				movies[left] = temp;
-				heaplify(movies, cnt, left);
+				heaplify_by_title(movies, cnt, left);
 			}
 		}
 	}
@@ -658,18 +684,15 @@ void execute_redix_sort(Movie* all_movies, int total) {
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
 	radix_sort(movies, 1000);			// 연도를 기준으로 기수 정렬
-	//radix_sort_by_title(movies, 1000);	// 제목을 기준으로 기수 정렬
+	radix_sort_by_title(movies, 1000);	// 제목을 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf(" 1000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
-/*
-	for (int i = 0; i < 1000; i++) {
-		printf("%d %s\n", movies[i].year, movies[i].title);
-	}
-	*/
+
 	// 5000개 정렬
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
 	radix_sort(movies, 5000);			// 연도를 기준으로 기수 정렬
+	radix_sort_by_title(movies, 5000);	// 제목을 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf(" 5000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
 
@@ -677,6 +700,7 @@ void execute_redix_sort(Movie* all_movies, int total) {
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
 	radix_sort(movies, 10000);			// 연도를 기준으로 기수 정렬
+	radix_sort_by_title(movies, 10000);	// 제목을 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf("10000 data\t%.3lfs \n", (double)(end - start) / (double)1000);	// 시간 출력
 
@@ -684,8 +708,12 @@ void execute_redix_sort(Movie* all_movies, int total) {
 	memcpy(movies, all_movies, sizeof(Movie) * ARRAY_SIZE);
 	start = clock();	// 시작 시간
 	radix_sort(movies, total);			// 연도를 기준으로 기수 정렬
+	radix_sort_by_title(movies, total);	// 제목을 기준으로 기수 정렬
 	end = clock();		// 종료 시간
 	printf("%5d data\t%.3lfs \n", total, (double)(end - start) / (double)1000);	// 시간 출력
+
+	// 출력
+	display_movies(movies, total);
 
 	free(movies);
 }
@@ -732,4 +760,71 @@ void radix_sort(Movie* movies, int cnt) {
 	int exp;
 	for (exp = 1; m / exp > 0; exp *= 10)
 		count_sort(movies, cnt, exp);
+}
+
+// 가장 짧은 제목의 길이를 찾음
+int get_min_by_title(Movie* movies, int cnt) {
+	Movie mx = movies[0];
+	int i;
+	for (i = 1; i < cnt; i++)
+		if (strlen(movies[i].title) < strlen(mx.title))
+			mx = movies[i];
+	return strlen(mx.title);
+}
+
+// 제목을 기준으로 계수 정렬
+void count_sort_by_title(Movie *movies, int cnt, int exp) {
+	Movie* output = malloc(sizeof(Movie) * cnt);
+	int i;
+	int count[128] = { 0 };
+
+	// 1. 자릿수의 종류별로 카운트 배열 생성
+	for (i = 0; i < cnt; i++) {
+		count[(int)(movies[i].title[exp])]++;
+	}
+
+	// 2. 누적 배열 생성
+	for (i = 1; i < 128; i++)
+		count[i] += count[i - 1];
+
+	// 3. 출력 배열 생성
+	for (i = cnt - 1; i >= 0; i--) {
+		output[count[(int)(movies[i].title[exp])] - 1] = movies[i];
+		count[(int)(movies[i].title[exp])]--;
+	}
+
+	for (i = 0; i < cnt; i++)
+		movies[i] = output[i];
+
+	free(output);
+}
+
+// 제목을 기준으로 계수 정렬을 사용한 기수 정렬
+void radix_sort_by_title(Movie* movies, int cnt) {
+	int m = get_min_by_title(movies, cnt);
+
+	int exp;
+	for (exp = m; exp >= 0 ; exp--)
+		count_sort_by_title(movies, cnt, exp);
+}
+
+// 출력 함수
+void display_movies(Movie* movies, int total) {
+	char c = 'a';
+	int i, cnt;
+
+	// 1. 출력할 데이터의 수량을 입력
+	do {
+		printf("\n<Message>\nEnter the number to be output(Skip 0) : ");
+		scanf("%d", &cnt);
+		while (c != '\n')
+			c = getchar(stdin);
+	} while (cnt > total);
+
+	// 2. 데이터 출력
+	if (!cnt)	return;
+	printf("\n<Data>\n");
+	for (i = 0; i < cnt; i++) {
+		printf("%d %s %s\n", movies[i].year, movies[i].title, movies[i].genres);
+	}
 }
